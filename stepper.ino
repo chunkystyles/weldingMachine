@@ -81,15 +81,13 @@ void readStepperValuesFromEeprom(){
 
 void handleStepper(){
   if (machineState == RUN){
-    handleRunTimer();
+    displayRun();
     digitalWrite(driverEnaPin, stepperEnabled);
     digitalWrite(driverDirPin, directionForward);
     doFirstSegment();
     doSecondSegment();
     digitalWrite(driverEnaPin, stepperDisabled);
-    sendOutputSignal();
     machineState = STOP;
-    resetRunTimer();
   }
 }
 
@@ -97,7 +95,6 @@ void doFirstSegment(){
   count = 0;
   while (count++ < firstStepNumber){
     sendStepperPulse(firstDelay);
-    calculatePercentDoneAndDisplay();
   }
 }
 
@@ -108,7 +105,6 @@ void doSecondSegment(){
     currentReduction += secondStepIncrement;
     currentDelay = secondStartDelay - (int)currentReduction;
     sendStepperPulse((int)currentDelay);
-    calculatePercentDoneAndDisplay();
   }
 }
 
@@ -174,16 +170,4 @@ void sendStepperPulse(int delayMicro){
   delayMicroseconds(delayMicro);
   digitalWrite(driverPulPin, LOW);
   delayMicroseconds(delayMicro);
-}
-
-void sendOutputSignal(){
-  digitalWrite(outputPin, HIGH);
-  delay(outputDelay);
-  digitalWrite(outputPin, LOW);
-}
-
-void calculatePercentDoneAndDisplay(){
-  if (count % displayUpdateStep == 0){
-    handleRunTimer();
-  }
 }

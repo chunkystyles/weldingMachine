@@ -25,7 +25,6 @@ enum TOGGLE {
 #define toggleButtonPin    7
 #define displayClkPin      8
 #define displayDioPin      9
-#define outputPin          10
 
 //Configuration
 #define potMaxValue 1023
@@ -33,7 +32,6 @@ enum TOGGLE {
 #define adjustDelay 100
 #define toggleDelay 300
 #define toggleTimeout 2000
-#define outputDelay 500 //0.5 seconds signal out
 
 const float adjustIncrement = potAdjustment / (float) potMaxValue;
 
@@ -53,7 +51,6 @@ void setup(){
   pinMode(driverDirPin, OUTPUT);
   pinMode(driverEnaPin, OUTPUT);
   pinMode(toggleButtonPin, INPUT_PULLUP);
-  pinMode(outputPin, OUTPUT);
   display.setBrightness(0x0f);
   readStepperValuesFromEeprom();
   calculateStepperValues();

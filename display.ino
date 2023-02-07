@@ -69,18 +69,8 @@ void displayToggle(){
   }
 }
 
-void handleRunTimer(){
-  if (currentTimerSegment < 0){
+void displayRun(){
     display.setSegments(display_run);
-    currentTimerSegment = 0;
-  } else {
-    currentTimerSegment++;
-    display.setSegments(display_timer + currentTimerSegment, 1, 3);
-  }
-}
-
-void resetRunTimer(){
-  currentTimerSegment = -1;
 }
 
 void displayHackyDecimal(float decimal){
