@@ -19,12 +19,13 @@ enum TOGGLE {
 #define adjustPotPin       0
 #define adjustButtonPin    2
 #define startStopButtonPin 3
-#define driverPulPin       4
-#define driverDirPin       5
-#define driverEnaPin       6
-#define toggleButtonPin    7
-#define displayClkPin      8
-#define displayDioPin      9
+#define toggleButtonPin    4
+#define displayClkPin      5
+#define displayDioPin      6
+
+#define driverPulPin       11
+#define driverDirPin       12
+#define driverEnaPin       13
 
 //Configuration
 #define potMaxValue 1023
