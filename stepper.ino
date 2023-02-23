@@ -8,6 +8,7 @@
 #define secondSegmentDegreesStore 8
 #define firstSegmentRpmStore 16
 #define secondSegmentRpmStore 24
+#define rampTimeStore 32
 
 /*
   Below values are for microstep set to 1/2 on the stepper driver
@@ -38,10 +39,11 @@ const int oneRpmDelay = 1500 / microStep;
 /*
   The below values are all store in EEPROM and retrieved from EEPROM on startup
 */
-int firstSegmentDegrees;   // originally 370;
-int secondSegmentDegrees;  // originally 20;
-float firstSegmentRpm;     // originally 0.5;
-float secondSegmentRpm;    // originally 2.0;
+int firstSegmentDegrees;   //How far the second segment turns
+int secondSegmentDegrees;  //How far the first segment turns
+float firstSegmentRpm;     //Desired first segment speed, it is constant for the first segment
+float secondSegmentRpm;    //Desired second segment speed, it will ramp from the first segment speed to this
+float rampTime;            //Time in seconds of how long it takes to ramp from the start speed to the end speed
 
 //First segment
 float firstRevFraction;    //The number of revolutions in first segment
@@ -52,24 +54,26 @@ int firstDelay;            //This determines the speed
 long secondStepNumber;     //Number of steps needed to complete second segment
 int secondStartDelay;      //This determines the beginning speed, starts the same as the first segment
 int secondEndDelay;        //This determines the finishing speed
-float secondStepIncrement; //This is how much the delay changes every pulse
 float currentReduction;    //This is the number that the delay shrinks each step, causing it to speed up
 float currentDelay;        //This is the delay needed for the increased speed in segment 2
+long rampTimeMicro;        //Ramp time in microseconds, so multiplied by 1,000,000
+long rampElapsedMicro;     //How much time has been spent ramping up, starts at zero and goes up to rampTime
+float rampPercent;         //Percentage of ramp achieved, starts at zero and goes to one
+float delayDifference;     //Difference between start delay and end delay
 
 long count;
 long totalSteps;
-long displayUpdateStep;
 
 void calculateStepperValues(){
   firstRevFraction = (float) firstSegmentDegrees / (float) degreesPerRev;
   firstStepNumber = stepsPerRev * firstRevFraction;
   firstDelay = oneRpmDelay / firstSegmentRpm;
   secondStepNumber = stepsPerRev * ((float) secondSegmentDegrees / (float) degreesPerRev);
+  totalSteps = firstStepNumber + secondStepNumber;
   secondStartDelay = firstDelay;
   secondEndDelay = oneRpmDelay / secondSegmentRpm;
-  secondStepIncrement = (float)(secondStartDelay - secondEndDelay) / (float)secondStepNumber;
-  totalSteps = firstStepNumber + secondStepNumber;
-  displayUpdateStep = totalSteps / (timer_segments - 1);
+  delayDifference = secondStartDelay - secondEndDelay;
+  rampTimeMicro = rampTime * 1000000;
 }
 
 void readStepperValuesFromEeprom(){
@@ -77,6 +81,7 @@ void readStepperValuesFromEeprom(){
   EEPROM_readAnything(secondSegmentDegreesStore, secondSegmentDegrees);
   EEPROM_readAnything(firstSegmentRpmStore, firstSegmentRpm);
   EEPROM_readAnything(secondSegmentRpmStore, secondSegmentRpm);
+  EEPROM_readAnything(rampTimeStore, rampTime);
 }
 
 void handleStepper(){
@@ -99,11 +104,14 @@ void doFirstSegment(){
 }
 
 void doSecondSegment(){
-  currentReduction = 0.0;
   currentDelay = secondStartDelay;
+  rampElapsedMicro = 0;
   while (count++ < totalSteps){
-    currentReduction += secondStepIncrement;
-    currentDelay = secondStartDelay - (int)currentReduction;
+    if (rampElapsedMicro <= rampTimeMicro){
+      rampPercent = (float)rampElapsedMicro / (float)rampTimeMicro;
+      currentDelay = (float)secondStartDelay - (delayDifference * rampPercent);
+      rampElapsedMicro += currentDelay * 2; //We have to double the currentDelay because each step of the motor requires two pulses of the same delay
+    }
     sendStepperPulse((int)currentDelay);
   }
 }
@@ -121,16 +129,19 @@ float changeFirstSegmentByPercent(float percent, float set){
 float getAdjustedValue(float adjust){
   switch (toggle) {
     case FIRST_SPD:
-      return (float)firstSegmentRpm * adjust;
+      return firstSegmentRpm * adjust;
       break;
     case SECOND_SPD:
-      return (float)secondSegmentRpm * adjust;
+      return secondSegmentRpm * adjust;
       break;
     case FIRST_DEGREES:
       return (float)firstSegmentDegrees * adjust;
       break;
     case SECOND_DEGREES:
       return (float)secondSegmentDegrees * adjust;
+      break;
+    case RAMP_TIME:
+      return rampTime * adjust;
       break;
     default:
       return 0.0;
@@ -155,6 +166,10 @@ void setAdjustedValue(float adjust){
     case SECOND_DEGREES:
       secondSegmentDegrees = roundUp((float)secondSegmentDegrees * adjust);
       EEPROM_writeAnything(secondSegmentDegreesStore, secondSegmentDegrees);
+      break;
+    case RAMP_TIME:
+      rampTime *= adjust;
+      EEPROM_writeAnything(rampTimeStore, rampTime);
       break;
     default:
       break;

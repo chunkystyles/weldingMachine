@@ -6,6 +6,7 @@
 #define letter_P     SEG_A | SEG_B | SEG_E | SEG_F | SEG_G
 #define letter_u     SEG_C | SEG_D | SEG_E
 #define letter_n     SEG_C | SEG_E | SEG_G
+#define letter_M     SEG_A | SEG_B | SEG_D | SEG_F
 #define letter_A     SEG_A | SEG_B | SEG_C | SEG_E | SEG_F | SEG_G
 #define letter_d     SEG_B | SEG_C | SEG_D | SEG_E | SEG_G
 #define letter_J     SEG_B | SEG_C | SEG_D | SEG_E
@@ -30,6 +31,7 @@ const uint8_t display_1spd[]     = { letter_1, letter_S,   letter_P, letter_d   
 const uint8_t display_2spd[]     = { letter_2, letter_S,   letter_P, letter_d     };
 const uint8_t display_1degrees[] = { letter_1, letter_deg, letter_S, letter_blank };
 const uint8_t display_2degrees[] = { letter_2, letter_deg, letter_S, letter_blank };
+const uint8_t display_ramp[]     = { letter_r, letter_A, letter_M, letter_P };
 const uint8_t display_timer[]    = { letter_blank, timer_1, timer_2, timer_3, timer_4, timer_5, timer_6 };
 const float timerFraction = 1.0 / ((float)timer_segments + 1.0);
 int currentTimerSegment = -1;
@@ -63,6 +65,9 @@ void displayToggle(){
       break;
     case SECOND_DEGREES:
       display.setSegments(display_2degrees);
+      break;
+    case RAMP_TIME:
+      display.setSegments(display_ramp);
       break;
     default:
       break;

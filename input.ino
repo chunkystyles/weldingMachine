@@ -34,7 +34,7 @@ void setupAdjust(){
 void handleAdjust(){
   previousPotValue = analogRead(adjustPotPin);
   float adjustedValue = getAdjustedValue(calculateAdjustValue());
-  if (toggle == FIRST_SPD || toggle == SECOND_SPD){
+  if (toggle == FIRST_SPD || toggle == SECOND_SPD || toggle == RAMP_TIME){
     displayHackyDecimal(adjustedValue);
   } else {
     display.showNumberDec(roundUp(adjustedValue));
@@ -60,6 +60,9 @@ void handleToggle(){
         toggle = SECOND_DEGREES;
         break;
       case SECOND_DEGREES:
+        toggle = RAMP_TIME;
+        break;
+      case RAMP_TIME:
         toggle = FIRST_SPD;
         break;
       default:
